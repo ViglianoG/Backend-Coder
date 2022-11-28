@@ -16,25 +16,43 @@ class ProductManager {
       return 1;
     }
   };
-
   addProduct = (title, description, price, thumbnail, code, stock) => {
     const id = this.getNextID();
-    const product = {
-      id: id,
-      title,
-      description,
-      price,
-      thumbnail,
-      code: code,
-      stock,
-    };
-    if (this.products.some((product) => product.code === product.code)) {
-      console.log(
-        "Error, ese producto ya se encuentra en la lista de productos"
+    const newCode = () => {
+      const newCode = Math.random();
+      const sameCode = this.products.some(
+        (product) => product.code === newCode
       );
-    } else {
-      return this.products.push(product);
-    }
+      if (sameCode == true) {
+        return "Error, ese código ya se encuentra en un producto.";
+      } else {
+        return newCode;
+      }
+    };
+
+    const product = {
+      id,
+      title:
+        title == undefined || title == "" || title == null
+          ? "Por favor especificar el titulo"
+          : title,
+      description:
+        description == undefined || description == "" || description == null
+          ? "Falta especificar la descripción del producto"
+          : description,
+      price: price == undefined || price == "" || price == null ? 0 : price,
+      thumbnail:
+        thumbnail == undefined || thumbnail == "" || thumbnail == null
+          ? "Por favor especificar la ruta de la imagen"
+          : thumbnail,
+      code: code == "" || code == undefined || code == null ? newCode() : code,
+      stock:
+        stock == null || stock == undefined
+          ? "Falta especificar el stock"
+          : stock,
+    };
+
+    this.products.push(product);
   };
 
   getProductByID = (productID) => {
@@ -53,13 +71,19 @@ console.log("✓-----------------------");
 console.log(productManager.getProducts());
 
 productManager.addProduct(
-  "producto prueba",
-  "Este es un producto prueba",
-  200,
-  "Sin imagen",
-  "abc123",
-  25
+  "Producto de prueba 1",
+  "Descripción del producto de prueba",
+  150,
+  "sin imagen",
+  "codigo123",
+  10
 );
+
+console.log("✓-----------------------");
+
+console.log(productManager.getProducts());
+
+productManager.addProduct("Producto de prueba 2", "", 10, "", "", 20);
 
 console.log("✓-----------------------");
 
@@ -67,19 +91,9 @@ console.log(productManager.getProducts());
 
 console.log("✓-----------------------");
 
-productManager.addProduct(
-  "producto prueba",
-  "Este es un producto prueba",
-  200,
-  "Sin imagen",
-  "abc123",
-  25
-);
-
+productManager.getProductByID(5);
 
 console.log("✓-----------------------");
 
-productManager.getProductByID(2);
-
-console.log("✓-----------------------");
-
+productManager.addProduct(); // producto sin especificar ningun campo
+productManager.getProductByID(3);
