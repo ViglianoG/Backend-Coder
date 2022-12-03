@@ -40,14 +40,17 @@ class ProductManager {
           ? "Falta especificar el stock"
           : stock,
     };
-    return this.getProducts().then((products) => {
-      products
-        .push(product)
-        .then((productsNew) =>
-          fs.promises.writeFile(this.filename, JSON.stringify(productsNew))
-        );
-    });
+
+    return this.getProducts()
+      .then((products) => {
+        products.push(product);
+        return products;
+      })
+      .then((productsNew) =>
+        fs.promises.writeFile(this.filename, JSON.stringify(productsNew))
+      );
   };
+
   getProducts = async () => {
     return fs.promises
       .readFile(this.filename, this.format)
@@ -58,11 +61,13 @@ class ProductManager {
       });
   };
 
-  getNextID = () => {
-    const count = this.getProducts().length;
-    console.log(count);
+  getNextID = async () => {
+    const products = await this.getProducts().then((products) => {
+      return products.length;
+    });
+    const count = products.length;
     if (count > 0) {
-      const lastproduct = this.getProducts()[count - 1];
+      const lastproduct = products[count - 1];
       const id = lastproduct.id + 1;
       return id;
     } else {
@@ -71,7 +76,9 @@ class ProductManager {
   };
 
   getProductByID = (productID) => {
-    const product = this.products.find((product) => product.id == productID);
+    const product = this.getProducts().find(
+      (product) => product.id == productID
+    );
     if (product == undefined) {
       console.log("Not Found");
     } else {
@@ -90,6 +97,7 @@ async function run() {
     "codigo123",
     10
   );
+
   console.log(await manager.getProducts());
 }
 
