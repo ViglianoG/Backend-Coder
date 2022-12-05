@@ -7,12 +7,11 @@ class ProductManager {
   }
 
   addProduct = async (title, description, price, thumbnail, code, stock) => {
-    const id = this.getNextID();
-    const newCode = () => {
+    const id = await this.getNextID();
+    const newCode = async () => {
       const newCode = Math.random();
-      const sameCode = this.products.some(
-        (product) => product.code === newCode
-      );
+      const products = await this.getProducts();
+      const sameCode = products.some((prod) => prod.code == newCode);
       if (sameCode == true) {
         return "Error, ese código ya se encuentra en un producto.";
       } else {
@@ -34,7 +33,10 @@ class ProductManager {
         thumbnail == undefined || thumbnail == "" || thumbnail == null
           ? "Por favor especificar la ruta de la imagen"
           : thumbnail,
-      code: code == "" || code == undefined || code == null ? newCode() : code,
+      code:
+        code == "" || code == undefined || code == null
+          ? await newCode()
+          : code,
       stock:
         stock == null || stock == undefined
           ? "Falta especificar el stock"
@@ -54,17 +56,20 @@ class ProductManager {
   getProducts = async () => {
     return fs.promises
       .readFile(this.filename, this.format)
-      .then((content) => JSON.parse(content))
+      .then((res) => {
+        if (res) {
+          const products = JSON.parse(res);
+          return products;
+        } else return [];
+      })
       .catch((error) => {
-        console.log("ERROR", error);
+        console.log("Error: ", error);
         return [];
       });
   };
 
   getNextID = async () => {
-    const products = await this.getProducts().then((products) => {
-      return products.length;
-    });
+    const products = await this.getProducts();
     const count = products.length;
     if (count > 0) {
       const lastproduct = products[count - 1];
@@ -75,63 +80,80 @@ class ProductManager {
     }
   };
 
-  getProductByID = (productID) => {
-    const product = this.getProducts().find(
-      (product) => product.id == productID
-    );
-    if (product == undefined) {
+  getProductByID = async (id) => {
+    const products = await this.getProducts();
+    const prodFound = products.find((product) => product.id == id);
+    if (prodFound == undefined) {
       console.log("Not Found");
     } else {
-      console.log(product);
+      return prodFound;
     }
+  };
+
+  saveProducts = (products) => {
+    const prodToString = JSON.stringify(products);
+    fs.promises.writeFile(this.filename, prodToString);
+  };
+
+  deleteProduct = async (id) => {
+    const products = await this.getProducts();
+    const updatedProducts = products.filter((prod) => prod.id !== id);
+
+    this.saveProducts(updatedProducts);
+  };
+
+  updateProduct = async (id, obj) => {
+    const products = await this.getProducts();
+    const prodToUpdate = products.findIndex((prod) => prod.id === id);
+
+    products[prodToUpdate] = {
+      ...products[prodToUpdate],
+      ...obj,
+      id: id,
+    };
+
+    this.saveProducts(products);
   };
 }
 
 async function run() {
-  const manager = new ProductManager("products.json");
+  const manager = new ProductManager("products.json"); ///✓
+  const getProd = await manager.getProducts();
+  console.log("------------------1");
+  console.log(getProd); /// error que no encuentra el archivo + array vacio
+
   await manager.addProduct(
     "Producto de prueba 1",
     "Descripción del producto de prueba",
-    150,
-    "sin imagen",
-    "codigo123",
+    200,
+    "Sin imagen",
+    "abc123",
+    25
+  );
+
+  console.log("------------------2");
+  console.log(getProd); ///✓
+
+  await manager.addProduct(
+    "Producto de prueba sin algunos campos",
+    "",
+    500,
+    "",
+    "",
     10
   );
 
-  console.log(await manager.getProducts());
+  console.log("------------------3");
+  console.log(await manager.getProductByID(2)); ///si
+  console.log(await manager.getProductByID(4)); ///no
+
+  console.log("------------------4");
+  await manager.updateProduct(2, { price: 300 });
+  console.log(getProd);
+
+  console.log("------------------5");
+  await manager.deleteProduct(1);
+  console.log(getProd);
 }
 
 run();
-
-// const productManager = new ProductManager();
-// console.log("✓-----------------------");
-
-// console.log(productManager.getProducts());
-
-// productManager.addProduct(
-//   "Producto de prueba 1",
-//   "Descripción del producto de prueba",
-//   150,
-//   "sin imagen",
-//   "codigo123",
-//   10
-// );
-
-// console.log("✓-----------------------");
-
-// console.log(productManager.getProducts());
-
-// productManager.addProduct("Producto de prueba 2", "", 10, "", "", 20);
-
-// console.log("✓-----------------------");
-
-// console.log(productManager.getProducts());
-
-// console.log("✓-----------------------");
-
-// productManager.getProductByID(5);
-
-// console.log("✓-----------------------");
-
-// productManager.addProduct(); // producto sin especificar ningun campo
-// productManager.getProductByID(3);
