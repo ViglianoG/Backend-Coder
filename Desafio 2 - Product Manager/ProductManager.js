@@ -97,6 +97,10 @@ class ProductManager {
 
   deleteProduct = async (id) => {
     const products = await this.getProducts();
+
+    const prodID = () => products.some((prod) => prod.id === id);
+    if (!prodID()) return console.log("Error el producto no existe.");
+
     const updatedProducts = products.filter((prod) => prod.id !== id);
 
     this.saveProducts(updatedProducts);
