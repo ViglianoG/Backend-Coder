@@ -1,0 +1,20 @@
+<div class="saludo">
+  <p>Lista de todos los productos agregados hasta el momento:</p>
+  {{#if products}}
+    <div class="products">
+      {{#each products}}
+        <div>
+          <h2>{{this.title}}</h2>
+          <p>{{this.description}}</p>
+          <h4>${{this.price}}</h4>
+          <h5>Stock disponible: {{this.stock}}</h5>
+          <hr />
+        </div>
+      {{/each}}
+    </div>
+  {{else}}
+    <h3>No existen productos...</h3>
+  {{/if}}
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/index.js"></script>
